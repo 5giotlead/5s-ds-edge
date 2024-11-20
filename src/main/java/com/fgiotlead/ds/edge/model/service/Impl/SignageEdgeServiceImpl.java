@@ -59,8 +59,8 @@ public class SignageEdgeServiceImpl implements SignageEdgeService {
                         }
                 )
         );
-        if (!files.isEmpty()) {
-            Flux<ByteBuffer> flux = fileService.checkFiles(files);
+        Flux<ByteBuffer> flux = fileService.checkFiles(files);
+        if (!flux.equals(Flux.empty())) {
             flux
                     .doOnComplete(() -> downloadComplete(edge))
                     .doOnError(error -> downloadError(error, edge))
@@ -117,8 +117,9 @@ public class SignageEdgeServiceImpl implements SignageEdgeService {
         edgeRepository.save(edge);
         edge.getProfiles().forEach(
                 profile -> {
-                    scheduleControlService.deleteSchedules(profile);
-                    if (edge.isEnable()) {
+                    if (!edge.isEnable()) {
+                        scheduleControlService.deleteSchedules(profile);
+                    } else {
                         scheduleControlService.createSchedules(profile);
                     }
                 }

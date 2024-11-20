@@ -1,6 +1,8 @@
 package com.fgiotlead.ds.edge.model.entity.schedule;
 
+import com.fgiotlead.ds.edge.model.listener.RegularScheduleListener;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.Hibernate;
@@ -8,6 +10,7 @@ import org.hibernate.Hibernate;
 import java.util.Objects;
 
 @Entity
+@EntityListeners(RegularScheduleListener.class)
 @Table(name = "signage_regular_schedule")
 @Getter
 @Setter

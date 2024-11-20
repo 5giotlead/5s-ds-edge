@@ -46,12 +46,12 @@ public class SignageJobServiceImpl implements SignageJobService {
                 case "job":
                 case "save":
                     if (type.equals(TriggerType.START) && TimeUtils.inSchedule(schedule.get())) {
-                        changeStyle(deviceId, scheduleId, styleId, type);
+                        this.changeStyle(deviceId, scheduleId, styleId, type);
                     } else if (type.equals(TriggerType.END) && !TimeUtils.inSchedule(schedule.get())) {
                         List<RegularScheduleEntity> schedules = schedule.get().getProfile().getSchedules()
                                 .stream().filter(TimeUtils::inSchedule).toList();
                         if (schedules.isEmpty()) {
-                            changeStyle(deviceId, scheduleId, styleId, type);
+                            this.changeStyle(deviceId, scheduleId, styleId, type);
                         }
                     }
                     break;
@@ -78,15 +78,14 @@ public class SignageJobServiceImpl implements SignageJobService {
     @Override
     public void setToDefault(UUID deviceId) {
         Optional<TbDeviceCredentialsEntity> credentialsEntity = tbDeviceCredentialsService.findByDeviceId(deviceId);
-        if (credentialsEntity.isPresent()) {
-            TbDeviceCredentialsEntity credentials = credentialsEntity.get();
-            if (credentials.getCredentialsType().equals("ACCESS_TOKEN")) {
-                String accessToken = credentialsEntity.get().getCredentialsId();
-                String attributesUri =
-                        isSecure ? "https" : "http" + "://" + host + ":" + port + "/api/v1/" + accessToken + "/attributes";
-                JsonNode jsonNode = restTemplate
-                        .getForObject(attributesUri + "?clientKeys=Schedule,Style", JsonNode.class);
-            }
+        if (credentialsEntity.isPresent() && credentialsEntity.get().getCredentialsType().equals("ACCESS_TOKEN")) {
+            String accessToken = credentialsEntity.get().getCredentialsId();
+            String attributesUri =
+                    isSecure ? "https" : "http" + "://" + host + ":" + port + "/api/v1/" + accessToken + "/attributes";
+            Map<String, String> requestMap = new HashMap<>();
+            requestMap.put("Schedule", "default");
+            requestMap.put("Style", "default");
+            setAttributes(attributesUri, requestMap);
         }
     }
 
@@ -101,20 +100,22 @@ public class SignageJobServiceImpl implements SignageJobService {
             JsonNode jsonNode = restTemplate
                     .getForObject(attributesUri + "?clientKeys=Schedule,Style", JsonNode.class);
             Map<String, String> requestMap = new HashMap<>();
-            if (jsonNode != null && jsonNode.get("shared") != null) {
+            if (jsonNode != null && !jsonNode.get("client").isEmpty()) {
+                JsonNode clientAttributes = jsonNode.get("client");
                 String currentScheduleId = "";
                 String currentStyleId = "";
-                if (!jsonNode.get("Schedule").isEmpty()) {
-                    currentScheduleId = jsonNode.get("Schedule").toString();
+                if (clientAttributes.get("Schedule") != null) {
+                    currentScheduleId = clientAttributes.get("Schedule").textValue();
                 }
+                if (clientAttributes.get("Style") != null) {
+                    currentStyleId = clientAttributes.get("Style").textValue();
+                }
+                boolean isSameJob = scheduleId.equals(currentScheduleId) && styleId.equals(currentStyleId);
                 if (type.equals(TriggerType.START)) {
-                    if (!scheduleId.equals(currentScheduleId) || !styleId.equals(currentStyleId)) {
-                        requestMap.put("Schedule", scheduleId);
-                        requestMap.put("Style", styleId);
-                    }
+                    requestMap.put("Schedule", scheduleId);
+                    requestMap.put("Style", styleId);
                 } else {
-                    if (scheduleId.equals(currentScheduleId) && styleId.equals(currentStyleId)) {
-//            if (!Objects.equals("default", currentScheduleId) && !Objects.equals("default", currentStyleId)) {
+                    if (isSameJob) {
                         requestMap.put("Schedule", "default");
                         requestMap.put("Style", "default");
                     }
@@ -128,11 +129,7 @@ public class SignageJobServiceImpl implements SignageJobService {
                     requestMap.put("Style", "default");
                 }
             }
-            try {
-                setAttributes(attributesUri, requestMap);
-            } catch (InterruptedException e) {
-                log.warn("Set Attributes failed, cause: {}", e.getClass());
-            }
+            setAttributes(attributesUri, requestMap);
         }
     }
 
@@ -140,18 +137,19 @@ public class SignageJobServiceImpl implements SignageJobService {
     public void refresh(String deviceId) {
         UUID id = UUID.fromString(deviceId);
         Optional<TbDeviceCredentialsEntity> credentialsEntity = tbDeviceCredentialsService.findByDeviceId(id);
-        if (credentialsEntity.isPresent()) {
-            TbDeviceCredentialsEntity credentials = credentialsEntity.get();
-            if (credentials.getCredentialsType().equals("ACCESS_TOKEN")) {
-                String accessToken = credentialsEntity.get().getCredentialsId();
-                String attributesUri =
-                        isSecure ? "https" : "http" + "://" + host + ":" + port + "/api/v1/" + accessToken + "/attributes";
-            }
+        if (credentialsEntity.isPresent() && credentialsEntity.get().getCredentialsType().equals("ACCESS_TOKEN")) {
+            String accessToken = credentialsEntity.get().getCredentialsId();
+            String attributesUri =
+                    isSecure ? "https" : "http" + "://" + host + ":" + port + "/api/v1/" + accessToken + "/attributes";
+            Map<String, String> requestMap = new HashMap<>();
+            requestMap.put("Refresh", "true");
+            setAttributes(attributesUri, requestMap);
+            requestMap.put("Refresh", "false");
+            setAttributes(attributesUri, requestMap);
         }
     }
 
-
-    private void setAttributes(String attributesUri, Map<String, String> requestMap) throws InterruptedException {
+    private void setAttributes(String attributesUri, Map<String, String> requestMap) {
         ResponseEntity<JsonNode> responseEntity;
         responseEntity = restTemplate.postForEntity(attributesUri, requestMap, JsonNode.class);
         log.trace("Set attributes response: {}", responseEntity.getStatusCode());

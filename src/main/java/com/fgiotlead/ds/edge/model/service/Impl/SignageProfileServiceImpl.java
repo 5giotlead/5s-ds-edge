@@ -7,11 +7,13 @@ import com.fgiotlead.ds.edge.model.service.SignageProfileService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 @Slf4j
 @Service
+@Transactional(rollbackFor = Exception.class)
 @AllArgsConstructor
 public class SignageProfileServiceImpl implements SignageProfileService {
 

@@ -34,7 +34,6 @@ public class ScheduleControlServiceImpl implements ScheduleControlService {
 
     @Override
     public void createSchedules(SignageProfileEntity signageProfile) {
-        this.deleteSchedules(signageProfile);
         signageProfile.getSchedules().forEach(
                 schedule -> {
                     List<SignageTriggerInfoEntity> triggerInfoList = packageTriggerInfo(signageProfile, schedule);
@@ -152,8 +151,13 @@ public class ScheduleControlServiceImpl implements ScheduleControlService {
                                     .withMisfireHandlingInstructionFireAndProceed()
                     )
                     .build();
-            scheduler.scheduleJob(jobDetail, trigger);
-            signageJobService.checkSchedule(deviceId, scheduleId, styleId, type, "save");
+            if (!scheduler.checkExists(triggerKey)) {
+                scheduler.scheduleJob(jobDetail, trigger);
+                signageJobService.checkSchedule(deviceId, scheduleId, styleId, type, "save");
+            } else {
+                signageJobService.refresh(deviceId);
+            }
+
         } catch (Exception e) {
             log.warn(e.getMessage());
         }
