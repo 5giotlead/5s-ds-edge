@@ -2,11 +2,15 @@ package com.fgiotlead.ds.edge.controller;
 
 import com.fgiotlead.ds.edge.model.entity.SignageStyleEntity;
 import com.fgiotlead.ds.edge.model.service.SignageStyleService;
+import com.fgiotlead.ds.edge.remote_control.model.enumEntity.CommandType;
+import com.fgiotlead.ds.edge.remote_control.model.service.DisplayControlService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,6 +21,7 @@ import java.util.UUID;
 public class SignageController {
 
     private SignageStyleService styleService;
+    private DisplayControlService displayControlService;
 
 
 //    @GetMapping("edge")
@@ -50,5 +55,15 @@ public class SignageController {
         return styleEntityOptional
                 .map(signageStyleEntity -> new ResponseEntity<>(signageStyleEntity, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @PostMapping("control/{displayId}/power:on")
+    public ResponseEntity<Map<String, String>> powerOn(@PathVariable int displayId) {
+        return displayControlService.remoteControl(CommandType.POWER_ON, displayId);
+    }
+
+    @PostMapping("control/{displayId}/power:off")
+    public ResponseEntity<Map<String, String>> powerOff(@PathVariable int displayId) {
+        return displayControlService.remoteControl(CommandType.POWER_OFF, displayId);
     }
 }

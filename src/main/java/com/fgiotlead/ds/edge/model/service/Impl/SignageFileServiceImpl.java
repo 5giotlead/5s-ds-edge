@@ -81,7 +81,7 @@ public class SignageFileServiceImpl implements SignageFileService {
             if (!existFiles.contains(file)) {
                 mergedFlux = mergedFlux.mergeWith(this.saveStream(file));
             } else {
-                log.info("file <{}> existed, skip download.", file.getOriginalName());
+                log.info("file <{}.{}> existed, skip download.", file.getOriginalName(), file.getMimeType());
             }
         }
         return mergedFlux;

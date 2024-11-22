@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Slf4j
@@ -142,9 +144,7 @@ public class SignageJobServiceImpl implements SignageJobService {
             String attributesUri =
                     isSecure ? "https" : "http" + "://" + host + ":" + port + "/api/v1/" + accessToken + "/attributes";
             Map<String, String> requestMap = new HashMap<>();
-            requestMap.put("Refresh", "true");
-            setAttributes(attributesUri, requestMap);
-            requestMap.put("Refresh", "false");
+            requestMap.put("Refresh", "" + LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond());
             setAttributes(attributesUri, requestMap);
         }
     }
@@ -153,11 +153,6 @@ public class SignageJobServiceImpl implements SignageJobService {
         ResponseEntity<JsonNode> responseEntity;
         responseEntity = restTemplate.postForEntity(attributesUri, requestMap, JsonNode.class);
         log.trace("Set attributes response: {}", responseEntity.getStatusCode());
-//        try {
-//            JsonNode request = JsonUtils.mapToJsonNode(requestMap);
-//        } catch (JsonProcessingException e) {
-//            log.warn(e.getMessage());
-//        }
     }
 
 //    private boolean inSchedule(PeriodSignageScheduleEntity periodSchedule) {
