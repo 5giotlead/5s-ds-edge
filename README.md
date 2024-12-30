@@ -19,6 +19,20 @@
 *   若下載檔案的 hash 與 file entity 中的不符，會回傳 DownlinkStatus = Error。
 *   下載完成後會透過 Spring Quartz 建立排程，目前設定為，若排程因故未觸發，會在回復正常後觸發最後一次的排程並檢查當前是否需要播放。
 *   排程觸發後透過呼叫 tb device http api 修改對應 device 的 attributes Style 及Schedule 的 id 作為 display dashboard 播放內容的依據。
+*   靜態資源上傳後透過 web server host ( NginX etc... )，預設圖片需手動複製到靜態資源存放路徑。
+    *   NginX sample config:
+        ```
+        server {
+            listen       8082;
+            server_name  localhost;
+
+            #access_log  /var/log/nginx/host.access.log  main;
+
+            location /resource {
+                alias /usr/share/nginx/.edgeplus-resource;
+            }
+        }
+        ```
 
 ## Setup
 
