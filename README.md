@@ -2,8 +2,6 @@
 
 *   Java version: 17
 *   Spring boot version: 3.2.4
-*   ER Model:
-<img class="op-uc-image op-uc-image_inline" src="/api/v3/attachments/530/content">
 
 ## Requirement
 
@@ -11,8 +9,6 @@
 *   Docker &amp; Docker compose
 
 ## Port
-
-*   Default，可透過環境變數修改
 
 1.  Http Server: 8081/tcp
 
