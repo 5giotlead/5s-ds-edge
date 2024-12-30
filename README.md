@@ -60,4 +60,5 @@ services:
 *   第一次啟動時需要將環境變數 SPRING_QUARTZ_JDBC_INITIALIZE-SCHEMA 設為 always，後續記得改回 never，避免 quartz 排程被清空重建。
 
 1.  啟動 ds-edge `docker compose up ds-edge -d`
-2.  檢查 ds-center log 是否有建立連線 `<edge_id> connected.` - `docker compose logs -f ds-center`
+2.  檢查 ds-center log 是否有建立連線 `<edge_id> connected.`
+    * 查看 log - `docker compose logs -f ds-center`
